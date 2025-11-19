@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生命成本计算器 - 看看你的饮食习惯会给你带来多少医疗账单</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --danger-red: #8B0000;
+            --danger-dark: #2F2F2F;
+            --health-green: #006633;
+            --health-light: #F5F5F5;
+            --medical-blue: #1E3A8A;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%);
+        }
+        
+        .serif-font {
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E5E7EB;
+        }
+        
+        .slider-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--danger-red);
+            cursor: pointer;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--danger-red);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid var(--danger-red);
+        }
+        
+        .health-card {
+            background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid var(--health-green);
+        }
+        
+        .risk-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .risk-low {
+            background-color: #DCFCE7;
+            color: #166534;
+        }
+        
+        .risk-medium {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .risk-high {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+        
+        .risk-very-high {
+            background-color: #FECACA;
+            color: #7F1D1D;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .medical-grid {
+            background-image: 
+                linear-gradient(rgba(139, 0, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 0, 0, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="min-h-screen medical-grid">
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-sm z-50 border-b-2 border-red-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="serif-font text-xl font-bold text-red-800">
+                    健康饮食警示
+                </div>
+                <div class="flex space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-red-600 font-medium">首页</a>
+                    <a href="#" class="text-red-600 font-bold">生命计算器</a>
+                    <a href="action.html" class="text-gray-700 hover:text-red-600 font-medium">行动清单</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <section class="pt-24 pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- 标题区域 -->
+            <div class="text-center mb-12">
+                <h1 class="serif-font text-4xl md:text-6xl font-black text-red-800 mb-6">
+                    生命成本计算器
+                </h1>
+                <h2 class="serif-font text-2xl md:text-3xl font-bold text-gray-800 mb-8">
+                    看看你的饮食习惯会给你带来多少医疗账单
+                </h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    输入你的基本信息和饮食习惯，我们将基于权威医学数据，为你计算健康投资与医疗成本的对比。
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- 左侧：输入表单 -->
+                <div class="lg:col-span-2">
+                    <div class="form-section p-8 mb-8">
+                        <h3 class="serif-font text-2xl font-bold mb-6 text-gray-800">基本信息</h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">年龄</label>
+                                <input type="number" id="age" min="1" max="120" value="35" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">性别</label>
+                                <select id="gender" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                    <option value="male">男性</option>
+                                    <option value="female">女性</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">当前体重 (kg)</label>
+                            <input type="number" id="weight" min="30" max="200" value="70" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">身高 (cm)</label>
+                            <input type="number" id="height" min="100" max="250" value="170" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        </div>
+                    </div>
+                    
+                    <div class="form-section p-8 mb-8">
+                        <h3 class="serif-font text-2xl font-bold mb-6 text-gray-800">饮食习惯评估</h3>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-4">
+                                你每周吃高糖食物的频率？（甜点、含糖饮料、精制碳水）
+                            </label>
+                            <div class="slider-container">
+                                <input type="range" id="sugar-frequency" min="0" max="7" value="3" 
+                                       class="slider" oninput="updateSliderValue('sugar-frequency-value', this.value)">
+                                <div class="flex justify-between text-sm text-gray-500 mt-2">
+                                    <span>从不</span>
+                                    <span id="sugar-frequency-value">3次/周</span>
+                                    <span>每天</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-4">
+                                你使用的烹饪油类型？
+                            </label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="oil-type" value="cheap" checked 
+                                           class="mr-2 text-red-600 focus:ring-red-500" onchange="calculateResults()">
+                                    <span>廉价植物油（大豆油、菜籽油）</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="oil-type" value="quality" 
+                                           class="mr-2 text-red-600 focus:ring-red-500" onchange="calculateResults()">
+                                    <span>优质油（橄榄油、亚麻籽油）</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-4">
+                                你每周吃加工肉制品的频率？（香肠、火腿、培根）
+                            </label>
+                            <div class="slider-container">
+                                <input type="range" id="processed-meat-frequency" min="0" max="7" value="2" 
+                                       class="slider" oninput="updateSliderValue('processed-meat-frequency-value', this.value)">
+                                <div class="flex justify-between text-sm text-gray-500 mt-2">
+                                    <span>从不</span>
+                                    <span id="processed-meat-frequency-value">2次/周</span>
+                                    <span>每天</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-4">
+                                你每顿饭的饱腹感？
+                            </label>
+                            <div class="slider-container">
+                                <input type="range" id="fullness-level" min="1" max="10" value="8" 
+                                       class="slider" oninput="updateSliderValue('fullness-level-value', this.value, '%')">
+                                <div class="flex justify-between text-sm text-gray-500 mt-2">
+                                    <span>七分饱</span>
+                                    <span id="fullness-level-value">80%</span>
+                                    <span>十分饱</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-4">
+                                你每周运动几次？
+                            </label>
+                            <div class="slider-container">
+                                <input type="range" id="exercise-frequency" min="0" max="7" value="2" 
+                                       class="slider" oninput="updateSliderValue('exercise-frequency-value', this.value)">
+                                <div class="flex justify-between text-sm text-gray-500 mt-2">
+                                    <span>从不</span>
+                                    <span id="exercise-frequency-value">2次/周</span>
+                                    <span>每天</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section p-8">
+                        <h3 class="serif-font text-2xl font-bold mb-6 text-gray-800">健康投资意愿</h3>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-4">
+                                你愿意每天额外投资多少钱在健康饮食？
+                            </label>
+                            <div class="slider-container">
+                                <input type="range" id="health-investment" min="0" max="100" value="20" 
+                                       class="slider" oninput="updateSliderValue('health-investment-value', this.value, '元/天')">
+                                <div class="flex justify-between text-sm text-gray-500 mt-2">
+                                    <span>0元</span>
+                                    <span id="health-investment-value">20元/天</span>
+                                    <span>100元</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：计算结果 -->
+                <div class="lg:col-span-1">
+                    <!-- 健康风险评估 -->
+                    <div class="result-card mb-8">
+                        <h3 class="serif-font text-xl font-bold mb-4 text-red-800">健康风险评估</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-700">糖尿病风险</span>
+                                <span id="diabetes-risk" class="risk-indicator risk-medium">中等</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-700">心血管疾病风险</span>
+                                <span id="cvd-risk" class="risk-indicator risk-high">较高</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-700">肥胖风险</span>
+                                <span id="obesity-risk" class="risk-indicator risk-medium">中等</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-700">整体健康评分</span>
+                                <span id="health-score" class="text-2xl font-bold text-red-600">65/100</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 成本对比 -->
+                    <div class="health-card mb-8">
+                        <h3 class="serif-font text-xl font-bold mb-4 text-green-800">投资对比</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-700">年度健康投资</span>
+                                    <span id="yearly-investment" class="text-xl font-bold text-green-600">¥7,300</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div id="investment-bar" class="bg-green-500 h-2 rounded-full" style="width: 10%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-700">预估医疗费用</span>
+                                    <span id="medical-cost" class="text-xl font-bold text-red-600">¥80,000</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div id="medical-bar" class="bg-red-500 h-2 rounded-full pulse-animation" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-4 bg-yellow-50 rounded-lg">
+                            <p class="text-sm text-yellow-800">
+                                <strong>投资回报率：</strong>
+                                <span id="roi-value" class="text-xl font-bold text-yellow-600">1:11</span>
+                            </p>
+                            <p class="text-xs text-yellow-600 mt-1">每投资1元健康，可节省11元医疗费</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 个性化建议 -->
+                    <div class="result-card">
+                        <h3 class="serif-font text-xl font-bold mb-4 text-red-800">个性化建议</h3>
+                        <div id="recommendations" class="space-y-3 text-sm text-gray-700">
+                            <p class="flex items-start">
+                                <span class="text-red-600 mr-2">•</span>
+                                立即减少高糖食物摄入，每周不超过1次
+                            </p>
+                            <p class="flex items-start">
+                                <span class="text-red-600 mr-2">•</span>
+                                更换烹饪油为橄榄油或亚麻籽油
+                            </p>
+                            <p class="flex items-start">
+                                <span class="text-red-600 mr-2">•</span>
+                                增加运动量至每周4-5次
+                            </p>
+                            <p class="flex items-start">
+                                <span class="text-red-600 mr-2">•</span>
+                                控制每餐饱腹感在70%左右
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图表区域 -->
+            <div class="mt-12">
+                <div class="form-section p-8">
+                    <h3 class="serif-font text-2xl font-bold mb-6 text-gray-800">风险因素分析</h3>
+                    <div id="risk-radar-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+            
+            <!-- 时间线预测 -->
+            <div class="mt-8">
+                <div class="form-section p-8">
+                    <h3 class="serif-font text-2xl font-bold mb-6 text-gray-800">健康趋势预测</h3>
+                    <div id="health-timeline-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 行动召唤 -->
+    <section class="py-16 bg-gray-100">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="serif-font text-3xl font-bold mb-8 text-gray-800">
+                现在就开始改变
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <a href="action.html" class="block p-8 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <h3 class="serif-font text-2xl font-bold mb-4">立即行动</h3>
+                    <p class="text-red-100">开始厨房大清洗，移除健康杀手</p>
+                </a>
+                <a href="index.html" class="block p-8 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <h3 class="serif-font text-2xl font-bold mb-4">了解更多</h3>
+                    <p class="text-green-100">返回首页查看详细的健康饮食真相</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">
+                © 2025 健康饮食警示网站 - 数据基于权威医学研究，仅供参考
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            calculateResults();
+            
+            // 监听所有输入变化
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', calculateResults);
+                input.addEventListener('input', calculateResults);
+            });
+        });
+
+        // 更新滑块值显示
+        function updateSliderValue(elementId, value, suffix = '次/周') {
+            const element = document.getElementById(elementId);
+            if (suffix === '次/周') {
+                element.textContent = value + suffix;
+            } else if (suffix === '%') {
+                element.textContent = value * 10 + suffix;
+            } else if (suffix === '元/天') {
+                element.textContent = value + suffix;
+            }
+            calculateResults();
+        }
+
+        // 计算结果
+        function calculateResults() {
+            // 获取输入值
+            const age = parseInt(document.getElementById('age').value);
+            const gender = document.getElementById('gender').value;
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const sugarFreq = parseInt(document.getElementById('sugar-frequency').value);
+            const oilType = document.querySelector('input[name="oil-type"]:checked').value;
+            const meatFreq = parseInt(document.getElementById('processed-meat-frequency').value);
+            const fullness = parseInt(document.getElementById('fullness-level').value);
+            const exerciseFreq = parseInt(document.getElementById('exercise-frequency').value);
+            const healthInvestment = parseInt(document.getElementById('health-investment').value);
+
+            // 计算BMI
+            const bmi = weight / ((height / 100) ** 2);
+            
+            // 计算风险评分
+            let diabetesRisk = calculateDiabetesRisk(age, bmi, sugarFreq, exerciseFreq);
+            let cvdRisk = calculateCVDRisk(age, gender, bmi, oilType, meatFreq, exerciseFreq);
+            let obesityRisk = calculateObesityRisk(bmi, sugarFreq, fullness, exerciseFreq);
+            
+            // 计算整体健康评分
+            const healthScore = Math.max(0, Math.min(100, 
+                100 - (diabetesRisk * 25 + cvdRisk * 35 + obesityRisk * 20 + (10 - exerciseFreq) * 2)
+            ));
+            
+            // 更新风险显示
+            updateRiskDisplay('diabetes-risk', diabetesRisk);
+            updateRiskDisplay('cvd-risk', cvdRisk);
+            updateRiskDisplay('obesity-risk', obesityRisk);
+            
+            document.getElementById('health-score').textContent = Math.round(healthScore) + '/100';
+            
+            // 计算成本
+            const yearlyInvestment = healthInvestment * 365;
+            const medicalCost = calculateMedicalCost(diabetesRisk, cvdRisk, obesityRisk, age);
+            const roi = (medicalCost / yearlyInvestment).toFixed(1);
+            
+            // 更新成本显示
+            document.getElementById('yearly-investment').textContent = '¥' + yearlyInvestment.toLocaleString();
+            document.getElementById('medical-cost').textContent = '¥' + medicalCost.toLocaleString();
+            document.getElementById('roi-value').textContent = '1:' + roi;
+            
+            // 更新进度条
+            const maxCost = Math.max(yearlyInvestment, medicalCost);
+            document.getElementById('investment-bar').style.width = (yearlyInvestment / maxCost * 100) + '%';
+            document.getElementById('medical-bar').style.width = (medicalCost / maxCost * 100) + '%';
+            
+            // 生成建议
+            generateRecommendations(diabetesRisk, cvdRisk, obesityRisk, sugarFreq, oilType, fullness, exerciseFreq);
+            
+            // 更新图表
+            updateCharts(diabetesRisk, cvdRisk, obesityRisk, healthScore, age);
+        }
+
+        // 计算糖尿病风险
+        function calculateDiabetesRisk(age, bmi, sugarFreq, exerciseFreq) {
+            let risk = 0;
+            risk += age > 45 ? 20 : 0;
+            risk += bmi > 25 ? 15 : 0;
+            risk += sugarFreq * 3;
+            risk += (7 - exerciseFreq) * 2;
+            return Math.min(100, risk);
+        }
+
+        // 计算心血管疾病风险
+        function calculateCVDRisk(age, gender, bmi, oilType, meatFreq, exerciseFreq) {
+            let risk = 0;
+            risk += age > 50 ? 25 : 0;
+            risk += gender === 'male' ? 5 : 0;
+            risk += bmi > 25 ? 20 : 0;
+            risk += oilType === 'cheap' ? 15 : 0;
+            risk += meatFreq * 4;
+            risk += (7 - exerciseFreq) * 3;
+            return Math.min(100, risk);
+        }
+
+        // 计算肥胖风险
+        function calculateObesityRisk(bmi, sugarFreq, fullness, exerciseFreq) {
+            let risk = 0;
+            risk += bmi > 25 ? 30 : 0;
+            risk += sugarFreq * 2;
+            risk += fullness > 7 ? 10 : 0;
+            risk += (7 - exerciseFreq) * 4;
+            return Math.min(100, risk);
+        }
+
+        // 计算医疗费用
+        function calculateMedicalCost(diabetesRisk, cvdRisk, obesityRisk, age) {
+            let baseCost = 50000;
+            baseCost += diabetesRisk * 500;
+            baseCost += cvdRisk * 800;
+            baseCost += obesityRisk * 300;
+            baseCost += age > 50 ? 20000 : 0;
+            return Math.round(baseCost);
+        }
+
+        // 更新风险显示
+        function updateRiskDisplay(elementId, risk) {
+            const element = document.getElementById(elementId);
+            let level, className;
+            
+            if (risk < 30) {
+                level = '低';
+                className = 'risk-low';
+            } else if (risk < 50) {
+                level = '中等';
+                className = 'risk-medium';
+            } else if (risk < 70) {
+                level = '较高';
+                className = 'risk-high';
+            } else {
+                level = '很高';
+                className = 'risk-very-high';
+            }
+            
+            element.textContent = level;
+            element.className = 'risk-indicator ' + className;
+        }
+
+        // 生成建议
+        function generateRecommendations(diabetesRisk, cvdRisk, obesityRisk, sugarFreq, oilType, fullness, exerciseFreq) {
+            const recommendations = document.getElementById('recommendations');
+            const suggestions = [];
+            
+            if (sugarFreq > 2) {
+                suggestions.push('立即减少高糖食物摄入，每周不超过1次');
+            }
+            
+            if (oilType === 'cheap') {
+                suggestions.push('更换烹饪油为橄榄油或亚麻籽油');
+            }
+            
+            if (exerciseFreq < 4) {
+                suggestions.push('增加运动量至每周4-5次');
+            }
+            
+            if (fullness > 7) {
+                suggestions.push('控制每餐饱腹感在70%左右');
+            }
+            
+            if (diabetesRisk > 50) {
+                suggestions.push('定期检查血糖，考虑咨询内分泌科医生');
+            }
+            
+            if (cvdRisk > 50) {
+                suggestions.push('定期检查血脂和血压，关注心血管健康');
+            }
+            
+            // 渲染建议
+            recommendations.innerHTML = '';
+            suggestions.forEach(suggestion => {
+                const p = document.createElement('p');
+                p.className = 'flex items-start';
+                p.innerHTML = `<span class="text-red-600 mr-2">•</span>${suggestion}`;
+                recommendations.appendChild(p);
+            });
+        }
+
+        // 初始化图表
+        function initCharts() {
+            initRiskRadarChart();
+            initHealthTimelineChart();
+        }
+
+        // 风险雷达图
+        function initRiskRadarChart() {
+            const chartDom = document.getElementById('risk-radar-chart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                title: {
+                    text: '健康风险因素分析',
+                    left: 'center'
+                },
+                radar: {
+                    indicator: [
+                        { name: '糖尿病风险', max: 100 },
+                        { name: '心血管疾病', max: 100 },
+                        { name: '肥胖风险', max: 100 },
+                        { name: '运动不足', max: 100 },
+                        { name: '饮食质量', max: 100 },
+                        { name: '年龄因素', max: 100 }
+                    ],
+                    radius: '60%'
+                },
+                series: [{
+                    name: '健康风险',
+                    type: 'radar',
+                    data: [{
+                        value: [40, 60, 35, 60, 70, 50],
+                        name: '当前状况',
+                        itemStyle: { color: '#8B0000' },
+                        areaStyle: { opacity: 0.3 }
+                    }]
+                }]
+            };
+            
+            myChart.setOption(option);
+            window.riskRadarChart = myChart;
+        }
+
+        // 健康时间线图
+        function initHealthTimelineChart() {
+            const chartDom = document.getElementById('health-timeline-chart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                title: {
+                    text: '健康趋势预测',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['当前趋势', '改善后趋势'],
+                    top: 30
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['现在', '1年后', '5年后', '10年后', '20年后']
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 100,
+                    name: '健康评分'
+                },
+                series: [
+                    {
+                        name: '当前趋势',
+                        type: 'line',
+                        data: [65, 62, 55, 45, 30],
+                        itemStyle: { color: '#8B0000' },
+                        lineStyle: { width: 3 }
+                    },
+                    {
+                        name: '改善后趋势',
+                        type: 'line',
+                        data: [65, 75, 85, 90, 95],
+                        itemStyle: { color: '#006633' },
+                        lineStyle: { width: 3 }
+                    }
+                ]
+            };
+            
+            myChart.setOption(option);
+            window.healthTimelineChart = myChart;
+        }
+
+        // 更新图表
+        function updateCharts(diabetesRisk, cvdRisk, obesityRisk, healthScore, age) {
+            // 更新雷达图
+            if (window.riskRadarChart) {
+                const exerciseFreq = parseInt(document.getElementById('exercise-frequency').value);
+                const oilType = document.querySelector('input[name="oil-type"]:checked').value;
+                const sugarFreq = parseInt(document.getElementById('sugar-frequency').value);
+                
+                window.riskRadarChart.setOption({
+                    series: [{
+                        data: [{
+                            value: [
+                                diabetesRisk,
+                                cvdRisk,
+                                obesityRisk,
+                                (7 - exerciseFreq) * 14,
+                                oilType === 'cheap' ? 70 : 30,
+                                Math.min(age * 1.2, 100)
+                            ],
+                            name: '当前状况'
+                        }]
+                    }]
+                });
+            }
+            
+            // 更新时间线图
+            if (window.healthTimelineChart) {
+                const currentTrend = [
+                    healthScore,
+                    Math.max(0, healthScore - 3),
+                    Math.max(0, healthScore - 10),
+                    Math.max(0, healthScore - 20),
+                    Math.max(0, healthScore - 35)
+                ];
+                
+                const improvedTrend = [
+                    healthScore,
+                    Math.min(100, healthScore + 10),
+                    Math.min(100, healthScore + 20),
+                    Math.min(100, healthScore + 25),
+                    Math.min(100, healthScore + 30)
+                ];
+                
+                window.healthTimelineChart.setOption({
+                    series: [
+                        { data: currentTrend },
+                        { data: improvedTrend }
+                    ]
+                });
+            }
+        }
+
+        // 响应式处理
+        window.addEventListener('resize', function() {
+            if (window.riskRadarChart) {
+                window.riskRadarChart.resize();
+            }
+            if (window.healthTimelineChart) {
+                window.healthTimelineChart.resize();
+            }
+        });
+    </script>
+</body>
+</html>

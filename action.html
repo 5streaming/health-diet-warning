@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>厨房大清洗行动清单 - 立即开始健康饮食</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --danger-red: #8B0000;
+            --danger-dark: #2F2F2F;
+            --health-green: #006633;
+            --health-light: #F5F5F5;
+            --medical-blue: #1E3A8A;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%);
+        }
+        
+        .serif-font {
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        .checklist-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .checklist-item:hover {
+            transform: translateX(5px);
+            background-color: #F9FAFB;
+        }
+        
+        .checklist-item.completed {
+            background-color: #F0FDF4;
+            border-color: #10B981;
+        }
+        
+        .checklist-item.completed .item-text {
+            text-decoration: line-through;
+            color: #6B7280;
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+        
+        .shopping-item {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--health-green);
+            transition: all 0.3s ease;
+        }
+        
+        .shopping-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .danger-item {
+            border-left-color: var(--danger-red);
+            background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+        }
+        
+        .medical-grid {
+            background-image: 
+                linear-gradient(rgba(139, 0, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 0, 0, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .pulse-green {
+            animation: pulse-green 2s infinite;
+        }
+        
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+        
+        .cost-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .cost-low {
+            background-color: #DCFCE7;
+            color: #166534;
+        }
+        
+        .cost-medium {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .cost-high {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+    </style>
+</head>
+<body class="min-h-screen medical-grid">
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-sm z-50 border-b-2 border-red-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="serif-font text-xl font-bold text-red-800">
+                    健康饮食警示
+                </div>
+                <div class="flex space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-red-600 font-medium">首页</a>
+                    <a href="calculator.html" class="text-gray-700 hover:text-red-600 font-medium">生命计算器</a>
+                    <a href="#" class="text-red-600 font-bold">行动清单</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <section class="pt-24 pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- 标题区域 -->
+            <div class="text-center mb-12">
+                <h1 class="serif-font text-4xl md:text-6xl font-black text-red-800 mb-6">
+                    厨房大清洗行动清单
+                </h1>
+                <h2 class="serif-font text-2xl md:text-3xl font-bold text-gray-800 mb-8">
+                    立即行动，清理掉这些健康杀手
+                </h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    不要只是看，现在就开始行动！按照清单逐一清理你的厨房，为家人的健康筑起第一道防线。
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- 左侧：清理清单 -->
+                <div class="lg:col-span-2">
+                    <!-- 进度显示 -->
+                    <div class="bg-white rounded-lg p-6 mb-8 shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="serif-font text-xl font-bold text-gray-800">清理进度</h3>
+                            <div class="flex items-center">
+                                <div class="relative w-16 h-16 mr-4">
+                                    <svg class="progress-ring w-16 h-16" viewBox="0 0 120 120">
+                                        <circle class="progress-ring-circle" stroke="#E5E7EB" stroke-width="8" 
+                                                fill="transparent" r="52" cx="60" cy="60"/>
+                                        <circle id="progress-circle" class="progress-ring-circle" stroke="#10B981" 
+                                                stroke-width="8" fill="transparent" r="52" cx="60" cy="60"
+                                                stroke-dasharray="326.73" stroke-dashoffset="326.73"/>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span id="progress-text" class="text-lg font-bold text-gray-800">0%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">已完成 <span id="completed-count">0</span>/14</p>
+                                    <p class="text-xs text-gray-500">继续加油！</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div id="progress-bar" class="bg-green-500 h-3 rounded-full transition-all duration-500" 
+                                 style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 必须扔掉的5样东西 -->
+                    <div class="bg-white rounded-lg p-8 mb-8 shadow-lg">
+                        <h3 class="serif-font text-2xl font-bold mb-6 text-red-800">
+                            🔥 必须立即扔掉的5样东西
+                        </h3>
+                        <p class="text-gray-600 mb-6">这些东西正在悄悄摧毁你和家人的健康，必须立即清除！</p>
+                        
+                        <div class="space-y-4">
+                            <div class="checklist-item danger-item p-4 rounded-lg border-2 border-red-200" 
+                                 onclick="toggleItem(this, '起酥油/人造黄油')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-red-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-red-800 item-text">起酥油/人造黄油</h4>
+                                        <p class="text-sm text-red-600">含有反式脂肪酸，是心血管疾病的元凶</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-high">替代成本：+15元/月</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🧈</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item danger-item p-4 rounded-lg border-2 border-red-200" 
+                                 onclick="toggleItem(this, '腌制食品')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-red-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-red-800 item-text">腌制食品（咸菜、榨菜、腊肉）</h4>
+                                        <p class="text-sm text-red-600">高钠+亚硝酸盐，致癌风险极高</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-low">替代成本：+5元/月</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🥓</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item danger-item p-4 rounded-lg border-2 border-red-200" 
+                                 onclick="toggleItem(this, '精制糖')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-red-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-red-800 item-text">精制糖/白砂糖</h4>
+                                        <p class="text-sm text-red-600">纯热量，零营养，糖尿病的罪魁祸首</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-medium">替代成本：+8元/月</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🍬</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item danger-item p-4 rounded-lg border-2 border-red-200" 
+                                 onclick="toggleItem(this, '劣质调和油')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-red-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-red-800 item-text">廉价调和油</h4>
+                                        <p class="text-sm text-red-600">Omega-6过量，促炎因子，堵塞血管</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-high">替代成本：+25元/月</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🛢️</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item danger-item p-4 rounded-lg border-2 border-red-200" 
+                                 onclick="toggleItem(this, '速溶饮品')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-red-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-red-800 item-text">速溶咖啡/奶茶</h4>
+                                        <p class="text-sm text-red-600">反式脂肪+糖分炸弹，代谢杀手</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-low">替代成本：+12元/月</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">☕</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 需要限制的5样东西 -->
+                    <div class="bg-white rounded-lg p-8 mb-8 shadow-lg">
+                        <h3 class="serif-font text-2xl font-bold mb-6 text-orange-700">
+                            ⚠️ 需要严格限制的5样东西
+                        </h3>
+                        <p class="text-gray-600 mb-6">这些东西可以少量食用，但必须控制频率和分量。</p>
+                        
+                        <div class="space-y-4">
+                            <div class="checklist-item shopping-item p-4 rounded-lg border-2 border-orange-200" 
+                                 onclick="toggleItem(this, '白米白面')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-orange-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800 item-text">精白米面</h4>
+                                        <p class="text-sm text-gray-600">高血糖指数，缺乏膳食纤维和维生素</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-low">建议：粗细搭配，1:1比例</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🍚</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item shopping-item p-4 rounded-lg border-2 border-orange-200" 
+                                 onclick="toggleItem(this, '加工肉制品')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-orange-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800 item-text">香肠、火腿、培根</h4>
+                                        <p class="text-sm text-gray-600">亚硝酸盐+高钠，世界卫生组织一级致癌物</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-medium">建议：每月不超过1-2次</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🌭</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item shopping-item p-4 rounded-lg border-2 border-orange-200" 
+                                 onclick="toggleItem(this, '含糖饮料')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-orange-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800 item-text">碳酸饮料、果汁饮料</h4>
+                                        <p class="text-sm text-gray-600">液态糖分，直接冲击胰腺</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-low">建议：用茶或白水替代</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🥤</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item shopping-item p-4 rounded-lg border-2 border-orange-200" 
+                                 onclick="toggleItem(this, '油炸食品')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-orange-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800 item-text">油炸食品</h4>
+                                        <p class="text-sm text-gray-600">高温产生致癌物，劣质油脂</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-medium">建议：每月不超过1次</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🍟</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item shopping-item p-4 rounded-lg border-2 border-orange-200" 
+                                 onclick="toggleItem(this, '罐头食品')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-orange-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800 item-text">罐头食品</h4>
+                                        <p class="text-sm text-gray-600">高钠+防腐剂，营养流失严重</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-low">建议：紧急时食用</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🥫</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 需要增加的4样东西 -->
+                    <div class="bg-white rounded-lg p-8 shadow-lg">
+                        <h3 class="serif-font text-2xl font-bold mb-6 text-green-700">
+                            ✅ 需要增加的4样健康食品
+                        </h3>
+                        <p class="text-gray-600 mb-6">用这些健康食品替代有害食品，投资健康，收获长寿。</p>
+                        
+                        <div class="space-y-4">
+                            <div class="checklist-item shopping-item p-4 rounded-lg border-2 border-green-200" 
+                                 onclick="toggleItem(this, '深海鱼类')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-green-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800 item-text">深海鱼类（三文鱼、沙丁鱼）</h4>
+                                        <p class="text-sm text-gray-600">富含Omega-3，抗炎，保护心血管</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-medium">成本：约80元/周</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🐟</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item shopping-item p-4 rounded-lg border-2 border-green-200" 
+                                 onclick="toggleItem(this, '坚果种子')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-green-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800 item-text">坚果种子（核桃、亚麻籽）</h4>
+                                        <p class="text-sm text-gray-600">健康脂肪+维生素E，大脑营养</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-low">成本：约30元/周</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🥜</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item shopping-item p-4 rounded-lg border-2 border-green-200" 
+                                 onclick="toggleItem(this, '橄榄油')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-green-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800 item-text">特级初榨橄榄油</h4>
+                                        <p class="text-sm text-gray-600">单不饱和脂肪酸，抗炎，保护心脏</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-medium">成本：约60元/月</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🫒</div>
+                                </div>
+                            </div>
+                            
+                            <div class="checklist-item shopping-item p-4 rounded-lg border-2 border-green-200" 
+                                 onclick="toggleItem(this, '全谷物')">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-5 h-5 text-green-600 mr-4" onchange="updateProgress()">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800 item-text">全谷物（燕麦、糙米、藜麦）</h4>
+                                        <p class="text-sm text-gray-600">膳食纤维+B族维生素，稳定血糖</p>
+                                        <div class="mt-2">
+                                            <span class="cost-badge cost-low">成本：约40元/月</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">🌾</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：购物清单和成本分析 -->
+                <div class="lg:col-span-1">
+                    <!-- 购物清单生成器 -->
+                    <div class="bg-white rounded-lg p-6 mb-8 shadow-lg">
+                        <h3 class="serif-font text-xl font-bold mb-4 text-green-800">智能购物清单</h3>
+                        <p class="text-sm text-gray-600 mb-4">基于你的清理进度，为你推荐需要购买的健康食品</p>
+                        
+                        <div id="shopping-list" class="space-y-3 mb-6">
+                            <!-- 动态生成的购物清单 -->
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-700">月度额外成本</span>
+                                <span id="monthly-cost" class="text-xl font-bold text-green-600">¥0</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-gray-700">年度健康投资</span>
+                                <span id="yearly-investment" class="text-lg font-bold text-green-600">¥0</span>
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                💡 相比ICU费用，这是微不足道的投资
+                            </div>
+                        </div>
+                        
+                        <button onclick="generateShoppingList()" 
+                                class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors pulse-green">
+                            🛒 重新生成购物清单
+                        </button>
+                    </div>
+                    
+                    <!-- 健康收益分析 -->
+                    <div class="bg-white rounded-lg p-6 shadow-lg">
+                        <h3 class="serif-font text-xl font-bold mb-4 text-blue-800">健康收益预测</h3>
+                        <div id="health-benefits-chart" style="height: 300px;"></div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <p class="mb-2">✅ 完成清理后预期收益：</p>
+                            <ul class="space-y-1">
+                                <li>• 糖尿病风险降低 <span class="font-bold text-green-600">35%</span></li>
+                                <li>• 心血管疾病风险降低 <span class="font-bold text-green-600">45%</span></li>
+                                <li>• 预期寿命增加 <span class="font-bold text-green-600">8-12年</span></li>
+                                <li>• 医疗成本节省 <span class="font-bold text-green-600">80%</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 行动召唤 -->
+    <section class="py-16 bg-gray-100">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="serif-font text-3xl font-bold mb-8 text-gray-800">
+                现在就开始行动
+            </h2>
+            <div class="bg-white rounded-lg p-8 shadow-lg">
+                <p class="text-lg text-gray-600 mb-6">
+                    记住：<strong class="text-red-700">你扔掉的每一包垃圾食品，都是在为家人的健康投资。</strong>
+                </p>
+                <p class="text-gray-600 mb-8">
+                    今天你嫌健康食品贵，明天ICU的费用会让你知道什么叫真正的贵。
+                </p>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <a href="calculator.html" class="block p-6 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <h3 class="serif-font text-2xl font-bold mb-4">重新计算风险</h3>
+                        <p class="text-red-100">看看清理后的健康改善效果</p>
+                    </a>
+                    <a href="index.html" class="block p-6 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <h3 class="serif-font text-2xl font-bold mb-4">了解更多真相</h3>
+                        <p class="text-green-100">返回首页查看详细的健康饮食对比</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">
+                © 2025 健康饮食警示网站 - 行动胜于空谈，健康始于今日
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initHealthBenefitsChart();
+            generateShoppingList();
+            updateProgress();
+        });
+
+        // 项目切换
+        function toggleItem(element, itemName) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('completed');
+                showBenefitMessage(itemName);
+            } else {
+                element.classList.remove('completed');
+            }
+            
+            updateProgress();
+            generateShoppingList();
+        }
+
+        // 显示收益消息
+        function showBenefitMessage(itemName) {
+            const benefits = {
+                '起酥油/人造黄油': '移除反式脂肪酸，心血管风险降低15%！',
+                '腌制食品': '减少钠摄入，高血压风险降低20%！',
+                '精制糖': '血糖更稳定，糖尿病风险降低25%！',
+                '劣质调和油': 'Omega-3增加，炎症水平下降！',
+                '速溶饮品': '减少添加剂负担，肝脏更轻松！',
+                '白米白面': '膳食纤维增加，饱腹感更持久！',
+                '加工肉制品': '减少致癌物摄入，癌症风险降低！',
+                '含糖饮料': '血糖稳定，体重更容易控制！',
+                '油炸食品': '减少致癌物，消化系统更健康！',
+                '罐头食品': '减少防腐剂，肝肾负担减轻！',
+                '深海鱼类': 'Omega-3增加，大脑更灵活！',
+                '坚果种子': '健康脂肪摄入，心血管更年轻！',
+                '橄榄油': '抗炎效果提升，细胞更健康！',
+                '全谷物': '膳食纤维充足，肠道更健康！'
+            };
+            
+            if (benefits[itemName]) {
+                // 创建临时提示
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 pulse-green';
+                toast.innerHTML = `✅ ${benefits[itemName]}`;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        }
+
+        // 更新进度
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const completed = document.querySelectorAll('input[type="checkbox"]:checked');
+            const progress = (completed.length / checkboxes.length) * 100;
+            
+            // 更新进度条
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = Math.round(progress) + '%';
+            document.getElementById('completed-count').textContent = completed.length;
+            
+            // 更新环形进度条
+            const circle = document.getElementById('progress-circle');
+            const circumference = 2 * Math.PI * 52;
+            const offset = circumference - (progress / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            
+            // 完成度动画
+            if (progress === 100) {
+                // 所有项目完成
+                setTimeout(() => {
+                    alert('🎉 恭喜！你已经完成了厨房大清洗！\n\n你的健康投资已经开始，家人的健康得到了保障。记住，这只是一个开始，坚持健康饮食，你将收获更多！');
+                }, 500);
+            }
+        }
+
+        // 生成购物清单
+        function generateShoppingList() {
+            const completedItems = document.querySelectorAll('.checklist-item.completed');
+            const shoppingList = document.getElementById('shopping-list');
+            const monthlyCost = document.getElementById('monthly-cost');
+            const yearlyInvestment = document.getElementById('yearly-investment');
+            
+            let totalCost = 0;
+            let listHTML = '';
+            
+            // 检查需要购买的健康食品
+            const healthItems = [
+                { name: '深海鱼类', cost: 80, checked: false },
+                { name: '坚果种子', cost: 30, checked: false },
+                { name: '特级初榨橄榄油', cost: 60, checked: false },
+                { name: '全谷物', cost: 40, checked: false }
+            ];
+            
+            healthItems.forEach(item => {
+                const element = document.querySelector(`input[type="checkbox"]:checked`).closest('.checklist-item');
+                if (element && element.textContent.includes(item.name)) {
+                    item.checked = true;
+                }
+                
+                if (!item.checked) {
+                    totalCost += item.cost;
+                    listHTML += `
+                        <div class="flex justify-between items-center p-2 bg-green-50 rounded">
+                            <span class="text-sm">${item.name}</span>
+                            <span class="text-xs text-green-600">¥${item.cost}/月</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (listHTML === '') {
+                listHTML = '<p class="text-sm text-gray-500">✅ 你已经购买了所有推荐的健康食品！</p>';
+            }
+            
+            shoppingList.innerHTML = listHTML;
+            monthlyCost.textContent = '¥' + totalCost;
+            yearlyInvestment.textContent = '¥' + (totalCost * 12);
+        }
+
+        // 健康收益图表
+        function initHealthBenefitsChart() {
+            const chartDom = document.getElementById('health-benefits-chart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c}%'
+                },
+                series: [
+                    {
+                        name: '健康收益',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        avoidLabelOverlap: false,
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: '18',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: [
+                            { value: 35, name: '糖尿病风险降低', itemStyle: { color: '#10B981' } },
+                            { value: 45, name: '心血管疾病风险降低', itemStyle: { color: '#059669' } },
+                            { value: 20, name: '癌症风险降低', itemStyle: { color: '#047857' } }
+                        ]
+                    }
+                ]
+            };
+            
+            myChart.setOption(option);
+            
+            // 响应式
+            window.addEventListener('resize', function() {
+                myChart.resize();
+            });
+        }
+
+        // 页面加载动画
+        window.addEventListener('load', function() {
+            anime({
+                targets: '.checklist-item',
+                translateX: [-50, 0],
+                opacity: [0, 1],
+                duration: 800,
+                delay: anime.stagger(100),
+                easing: 'easeOutQuart'
+            });
+        });
+    </script>
+</body>
+</html>

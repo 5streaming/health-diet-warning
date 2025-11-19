@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>餐桌上的"慢性自杀"：你省下的买菜钱，最后都会变成 ICU 的账单</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --danger-red: #8B0000;
+            --danger-dark: #2F2F2F;
+            --health-green: #006633;
+            --health-light: #F5F5F5;
+            --medical-blue: #1E3A8A;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%);
+        }
+        
+        .serif-font {
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        .danger-gradient {
+            background: linear-gradient(135deg, var(--danger-red) 0%, #000000 100%);
+        }
+        
+        .health-gradient {
+            background: linear-gradient(135deg, var(--health-green) 0%, #FFFFFF 100%);
+        }
+        
+        .warning-border {
+            border: 3px solid var(--danger-red);
+            animation: pulse-warning 2s infinite;
+        }
+        
+        @keyframes pulse-warning {
+            0%, 100% { border-color: var(--danger-red); }
+            50% { border-color: #FF0000; }
+        }
+        
+        .heartbeat {
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .cutting-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cutting-effect::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 0, 0, 0.3), transparent);
+            animation: cut-effect 3s ease-in-out infinite;
+        }
+        
+        @keyframes cut-effect {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+        
+        .medical-grid {
+            background-image: 
+                linear-gradient(rgba(139, 0, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 0, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .glucose-spike {
+            background: linear-gradient(45deg, #FF0000, #8B0000);
+            animation: glucose-rise 2s ease-out;
+        }
+        
+        @keyframes glucose-rise {
+            0% { height: 0%; }
+            100% { height: 100%; }
+        }
+        
+        .comparison-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .number-counter {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--danger-red);
+        }
+        
+        #p5-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.1;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 背景粒子效果 -->
+    <div id="p5-background"></div>
+    
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-sm z-50 border-b-2 border-red-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="serif-font text-xl font-bold text-red-800">
+                    健康饮食警示
+                </div>
+                <div class="flex space-x-8">
+                    <a href="#" class="text-gray-700 hover:text-red-600 font-medium">首页</a>
+                    <a href="calculator.html" class="text-gray-700 hover:text-red-600 font-medium">生命计算器</a>
+                    <a href="action.html" class="text-gray-700 hover:text-red-600 font-medium">行动清单</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主标题区域 -->
+    <section class="pt-20 pb-16 medical-grid">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h1 class="serif-font text-5xl md:text-7xl font-black text-red-800 mb-6 cutting-effect">
+                    餐桌上的"慢性自杀"
+                </h1>
+                <h2 class="serif-font text-2xl md:text-3xl font-bold text-gray-800 mb-8">
+                    你省下的买菜钱，最后都会变成 ICU 的账单
+                </h2>
+                <div class="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                    <p class="mb-4">我们要承认一个残酷的事实：<strong class="text-red-700">大多数家庭的餐桌，正在慢慢摧毁家人的身体。</strong></p>
+                    <p>如果你真的爱你的家人，就请停止用"垃圾"填满他们的胃。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 四组真相对比区域 -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="serif-font text-4xl font-bold text-center mb-16 text-gray-800">
+                四组残酷的真相
+            </h2>
+            
+            <!-- 第一组真相：早餐桌上的"胰岛素炸弹" -->
+            <div class="mb-20">
+                <h3 class="serif-font text-3xl font-bold mb-8 text-red-700">第一组真相：早餐桌上的"胰岛素炸弹"</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- 错误早餐 -->
+                    <div class="comparison-card danger-gradient text-white p-8 rounded-lg">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mr-4">
+                                <span class="text-white font-bold text-xl">❌</span>
+                            </div>
+                            <h4 class="serif-font text-2xl font-bold">传统的"自杀式"早餐</h4>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-lg font-semibold mb-2">菜单：白粥 + 咸菜 + 馒头/油条</p>
+                            <p class="text-red-200 mb-4">本质：一碗纯糖水 + 钠超标的致癌物 + 劣质油脂</p>
+                        </div>
+                        <div class="mb-6">
+                            <p class="font-semibold mb-2">身体反应：</p>
+                            <p class="text-red-200">血糖像过山车一样飙升，胰腺被迫疯狂工作</p>
+                            <div class="mt-4 h-20 bg-red-900 rounded relative overflow-hidden">
+                                <div class="glucose-spike w-full absolute bottom-0"></div>
+                            </div>
+                        </div>
+                        <div class="warning-border p-4 rounded bg-red-900/50">
+                            <p class="font-bold">后果：上午10点就犯困、脑雾、注意力涣散。长期这样吃，直接预定糖尿病床位。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 正确早餐 -->
+                    <div class="comparison-card health-gradient text-gray-800 p-8 rounded-lg">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mr-4">
+                                <span class="text-white font-bold text-xl">✅</span>
+                            </div>
+                            <h4 class="serif-font text-2xl font-bold">生物黑客的"能量"早餐</h4>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-lg font-semibold mb-2">菜单：纯燕麦/杂粮 + 水煮蛋 + 纯牛奶/豆浆</p>
+                            <p class="text-gray-600 mb-4">本质：慢速释放的燃料 + 细胞修复的材料</p>
+                        </div>
+                        <div class="mb-6">
+                            <p class="font-semibold mb-2">身体反应：</p>
+                            <p class="text-gray-600">血糖是平滑直线，大脑持续获得稳定葡萄糖供应</p>
+                            <div class="mt-4 h-20 bg-green-100 rounded relative">
+                                <div class="absolute bottom-0 w-full h-1/3 bg-green-500 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="border-3 border-green-500 p-4 rounded bg-green-50">
+                            <p class="font-bold text-green-800">后果：大脑像被点亮，专注、清醒、情绪稳定。这才是人类该有的状态。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第二组真相：廉价油脂造成的"血管淤泥" -->
+            <div class="mb-20">
+                <h3 class="serif-font text-3xl font-bold mb-8 text-red-700">第二组真相：廉价油脂造成的"血管淤泥"</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- 错误油脂 -->
+                    <div class="comparison-card danger-gradient text-white p-8 rounded-lg">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mr-4">
+                                <span class="text-white font-bold text-xl">❌</span>
+                            </div>
+                            <h4 class="serif-font text-2xl font-bold">省钱的"堵血管"吃法</h4>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-lg font-semibold mb-2">习惯：大量廉价大豆油/菜籽油，高温爆炒，回锅油炸</p>
+                        </div>
+                        <div class="mb-6">
+                            <p class="font-semibold mb-2">体内画面：</p>
+                            <p class="text-red-200 mb-4">富含Omega-6的劣质油 + 高温氧化 = 促炎因子</p>
+                            <img src="resources/unhealthy-oils-warning.jpg" alt="血管堵塞" class="w-full h-32 object-cover rounded">
+                        </div>
+                        <div class="warning-border p-4 rounded bg-red-900/50">
+                            <p class="font-bold">残酷结局：你以为省了油钱，其实是在为心脏支架和脑梗塞攒首付。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 正确油脂 -->
+                    <div class="comparison-card health-gradient text-gray-800 p-8 rounded-lg">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mr-4">
+                                <span class="text-white font-bold text-xl">✅</span>
+                            </div>
+                            <h4 class="serif-font text-2xl font-bold">保命的"抗炎"吃法</h4>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-lg font-semibold mb-2">习惯：橄榄油、亚麻籽油，补充深海鱼油，多凉拌蒸煮</p>
+                        </div>
+                        <div class="mb-6">
+                            <p class="font-semibold mb-2">体内画面：</p>
+                            <p class="text-gray-600 mb-4">Omega-3脂肪酸是血管的"清道夫"和大脑的"润滑油"</p>
+                            <img src="resources/healthy-oils-benefits.jpg" alt="健康血管" class="w-full h-32 object-cover rounded">
+                        </div>
+                        <div class="border-3 border-green-500 p-4 rounded bg-green-50">
+                            <p class="font-bold text-green-800">残酷结局：皮肤透亮，关节不痛，大脑反应敏捷。这种健康感，花多少钱都买不到。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第三组真相：关于"饱"的谎言 -->
+            <div class="mb-20">
+                <h3 class="serif-font text-3xl font-bold mb-8 text-red-700">第三组真相：关于"饱"的谎言</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- 错误进食 -->
+                    <div class="comparison-card danger-gradient text-white p-8 rounded-lg">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mr-4">
+                                <span class="text-white font-bold text-xl">❌</span>
+                            </div>
+                            <h4 class="serif-font text-2xl font-bold">无意识的进食（饲料模式）</h4>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-lg font-semibold mb-2">状态：追求"饭气攻心"的快感，必须吃到肚子发胀</p>
+                        </div>
+                        <div class="mb-6">
+                            <p class="font-semibold mb-2">生理代价：</p>
+                            <p class="text-red-200">大量血液涌向胃部，大脑缺氧。饭后瘫在沙发上，身体正在费力处理毒素。</p>
+                        </div>
+                        <div class="warning-border p-4 rounded bg-red-900/50">
+                            <p class="font-bold">长期影响：内脏脂肪堆积，脂肪肝，呼吸暂停综合征。你正在亲手把自己变成油腻的中年人。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 正确进食 -->
+                    <div class="comparison-card health-gradient text-gray-800 p-8 rounded-lg">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mr-4">
+                                <span class="text-white font-bold text-xl">✅</span>
+                            </div>
+                            <h4 class="serif-font text-2xl font-bold">有意识的进食（燃料模式）</h4>
+                        </div>
+                        <div class="mb-6">
+                            <p class="text-lg font-semibold mb-2">状态：追求"七分饱"的轻盈，吃是为了给大脑和肌肉供能</p>
+                        </div>
+                        <div class="mb-6">
+                            <p class="font-semibold mb-2">生理代价：</p>
+                            <p class="text-gray-600">吃完饭后，身体立刻就能进入工作或运动状态。没有负担，只有能量。</p>
+                        </div>
+                        <div class="border-3 border-green-500 p-4 rounded bg-green-50">
+                            <p class="font-bold text-green-800">长期影响：保持敏锐，保持精悍。你在同龄人开始发福油腻的时候，依然像个战士。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第四组真相：算一笔"救命账" -->
+            <div class="mb-20">
+                <h3 class="serif-font text-3xl font-bold mb-8 text-red-700">第四组真相：算一笔"救命账"</h3>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <div class="text-center">
+                            <h4 class="serif-font text-2xl font-bold text-green-700 mb-4">健康饮食成本</h4>
+                            <div class="space-y-2 text-lg">
+                                <p>每天多花 <span class="number-counter heartbeat">20</span> 元</p>
+                                <p>一个月多花 <span class="text-2xl font-bold text-green-600">600</span> 元</p>
+                                <p>一年多花 <span class="text-3xl font-bold text-green-600">7,200</span> 元</p>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="serif-font text-2xl font-bold text-red-700 mb-4">生病ICU成本</h4>
+                            <div class="space-y-2 text-lg">
+                                <p>ICU一天费用：<span class="number-counter heartbeat">8,000</span> 元</p>
+                                <p>进口靶向药：<span class="text-2xl font-bold text-red-600">数万至数十万</span></p>
+                                <p>护工费：<span class="text-2xl font-bold text-red-600">300/天</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 成本对比图表 -->
+                    <div class="mb-8">
+                        <div id="cost-comparison-chart" style="height: 400px;"></div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="warning-border p-6 rounded bg-red-50">
+                            <p class="serif-font text-xl font-bold text-red-800 mb-4">
+                                结论：现在的每一口健康食物，都是你投给未来的"尊严保险"。
+                            </p>
+                            <p class="text-lg text-red-700">
+                                现在的每一顿垃圾暴食，都是你在透支生命的"高利贷"。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 行动召唤区域 -->
+    <section class="py-16 bg-gray-100">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="serif-font text-4xl font-bold mb-8 text-gray-800">
+                醒醒吧，这不只是一顿饭
+            </h2>
+            <div class="text-lg text-gray-600 mb-12 leading-relaxed">
+                <p class="mb-4">不要再说"老一辈吃了一辈子咸菜也没事"。</p>
+                <p class="mb-4">时代的生存环境变了，我们的压力变了，食品工业也变了。</p>
+                <p class="mb-6"><strong class="text-red-700">在这个充满了糖分陷阱和劣质添加剂的世界里，保持清醒的饮食，是一种极高的自律，更是一种生存智慧。</strong></p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <a href="calculator.html" class="block p-8 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <h3 class="serif-font text-2xl font-bold mb-4">计算你的生命成本</h3>
+                    <p class="text-red-100">看看你的饮食习惯会给你带来多少医疗账单</p>
+                </a>
+                <a href="action.html" class="block p-8 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <h3 class="serif-font text-2xl font-bold mb-4">开始厨房大清洗</h3>
+                    <p class="text-green-100">立即行动，清理掉这些健康杀手</p>
+                </a>
+            </div>
+            
+            <div class="warning-border p-8 rounded bg-white">
+                <p class="serif-font text-2xl font-bold text-red-800 mb-4">
+                    作为家里的顶梁柱/未来的顶梁柱，请把垃圾食品扔进垃圾桶。
+                </p>
+                <p class="text-lg text-red-700">
+                    哪怕父母骂你浪费，也好过以后你在医院的走廊里痛哭。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">
+                © 2025 健康饮食警示网站 - 救救你自己，也救救你的家人
+            </p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>
